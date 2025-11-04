@@ -5,6 +5,7 @@ import { throttle } from 'lodash';
 
 import api from 'mastodon/api';
 import { browserHistory } from 'mastodon/components/router';
+import { countableText } from 'mastodon/features/compose/util/counter';
 import { search as emojiSearch } from 'mastodon/features/emoji/emoji_mart_search_light';
 import { tagHistory } from 'mastodon/settings';
 
@@ -88,6 +89,7 @@ const messages = defineMessages({
   open: { id: 'compose.published.open', defaultMessage: 'Open' },
   published: { id: 'compose.published.body', defaultMessage: 'Post published.' },
   saved: { id: 'compose.saved.body', defaultMessage: 'Post saved.' },
+  blankPostError: { id: 'compose.error.blank_post', defaultMessage: 'Post can\'t be blank.' },
 });
 
 export const ensureComposeIsVisible = (getState) => {
@@ -197,7 +199,15 @@ export function submitCompose(successCallback) {
     const hasQuote = !!getState().getIn(['compose', 'quoted_status_id']);
     const spoiler_text = getState().getIn(['compose', 'spoiler']) ? getState().getIn(['compose', 'spoiler_text'], '') : '';
 
-    if (!(status?.length || media.size !== 0 || (hasQuote && spoiler_text?.length))) {
+    const fulltext = `${spoiler_text ?? ''}${countableText(status ?? '')}`;
+    const hasText = fulltext.trim().length > 0;
+
+    if (!(hasText || media.size !== 0 || (hasQuote && spoiler_text?.length))) {
+      dispatch(showAlert({
+        message: messages.blankPostError,
+      }));
+      dispatch(focusCompose());
+
       return;
     }
 
@@ -624,6 +634,7 @@ export function fetchComposeSuggestions(token) {
       fetchComposeSuggestionsEmojis(dispatch, getState, token);
       break;
     case '#':
+    case '＃':
       fetchComposeSuggestionsTags(dispatch, getState, token);
       break;
     default:
@@ -665,11 +676,11 @@ export function selectComposeSuggestion(position, token, suggestion, path) {
 
       dispatch(useEmoji(suggestion));
     } else if (suggestion.type === 'hashtag') {
-      completion    = `#${suggestion.name}`;
-      startPosition = position - 1;
+      completion    = suggestion.name.slice(token.length - 1);
+      startPosition = position + token.length;
     } else if (suggestion.type === 'account') {
-      completion    = getState().getIn(['accounts', suggestion.id, 'acct']);
-      startPosition = position;
+      completion    = `@${getState().getIn(['accounts', suggestion.id, 'acct'])}`;
+      startPosition = position - 1;
     }
 
     // We don't want to replace hashtags that vary only in case due to accessibility, but we need to fire off an event so that
@@ -729,7 +740,7 @@ function insertIntoTagHistory(recognizedTags, text) {
     // complicated because of new normalization rules, it's no longer just
     // a case sensitivity issue
     const names = recognizedTags.map(tag => {
-      const matches = text.match(new RegExp(`#${tag.name}`, 'i'));
+      const matches = text.match(new RegExp(`[#＃]${tag.name}`, 'i'));
 
       if (matches && matches.length > 0) {
         return matches[0].slice(1);
