@@ -64,6 +64,7 @@ class ComposeForm extends ImmutablePureComponent {
     onSuggestionSelected: PropTypes.func.isRequired,
     onChangeSpoilerText: PropTypes.func.isRequired,
     onPaste: PropTypes.func.isRequired,
+    onDrop: PropTypes.func.isRequired,
     onPickEmoji: PropTypes.func.isRequired,
     autoFocus: PropTypes.bool,
     withoutNavigation: PropTypes.bool,
@@ -102,6 +103,7 @@ class ComposeForm extends ImmutablePureComponent {
   handleKeyDownPost = (e) => {
     if (e.key.toLowerCase() === 'enter' && (e.ctrlKey || e.metaKey)) {
         this.handleSubmit();
+        e.preventDefault();
     }
     this.blurOnEscape(e);
   };
@@ -140,7 +142,10 @@ class ComposeForm extends ImmutablePureComponent {
       return;
     }
 
-    this.props.onSubmit(missingAltTextModal && this.props.missingAltText && this.props.privacy !== 'direct');
+    this.props.onSubmit({
+      missingAltText: missingAltTextModal && this.props.missingAltText && this.props.privacy !== 'direct',
+      quoteToPrivate: this.props.quoteToPrivate,
+    });
 
     if (e) {
       e.preventDefault();
@@ -245,7 +250,7 @@ class ComposeForm extends ImmutablePureComponent {
   };
 
   render () {
-    const { intl, onPaste, autoFocus, withoutNavigation, maxChars, isSubmitting } = this.props;
+    const { intl, onPaste, onDrop, autoFocus, withoutNavigation, maxChars, isSubmitting } = this.props;
     const { highlighted } = this.state;
 
     return (
@@ -301,6 +306,7 @@ class ComposeForm extends ImmutablePureComponent {
             onSuggestionsClearRequested={this.onSuggestionsClearRequested}
             onSuggestionSelected={this.onSuggestionSelected}
             onPaste={onPaste}
+            onDrop={onDrop}
             autoFocus={autoFocus}
             lang={this.props.lang}
             className='compose-form__input'

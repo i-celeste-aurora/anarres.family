@@ -1121,7 +1121,6 @@ sk:
       disabled_account: Tvoj súčasný účet už po tomto nebude plne použiteľný. Stále ale budeš mať prístup ku stiahnutiu dát a možnosti znovu-aktivácie.
       followers: Tento úkon presunie všetkých následovateľov zo súčasného účtu na nový účet
       only_redirect_html: Ako alternatívu, môžeš <a href="%{path}">iba nastaviť presmerovanie na tvoj profil</a>.
-      other_data: Žiadne iné dáta nebudú presunuté automaticky
       redirect: Tvoj súčastný účet bude aktualizovaný s oznamom o presunutí a bude vylúčený z vyhľadávania
   moderation:
     title: Moderovanie
@@ -1329,11 +1328,9 @@ sk:
     enabled: Automaticky mazať staré príspevky
     enabled_hint: Automaticky vymaže vaše príspevky po dosiahnutí stanoveného veku, pokiaľ nespadajú do niektorej z výnimiek nižšie
     exceptions: Výnimky
-    explanation: Keďže je mazanie príspevkov drahým procesom, bude sa to diať pomaly a postupne v časoch, keď server nie je inak vyťažovaný. Preto môže príspevkom po dosiahnutí stanoveného veku ešte chvíľu trvať, než budú vymazané.
     ignore_favs: Ignorovať hviezdičky
     ignore_reblogs: Ignorovať zdieľania
     interaction_exceptions: Výnimky podľa interakcií
-    interaction_exceptions_explanation: Vymazanie príspevkov nie je zaručené, pokiaľ klesnú pod limit hviezdičkovaní alebo zdieľaní až po kontrole.
     keep_direct: Ponechať súkromné správy
     keep_direct_hint: Vaše súkromné správy nebudú vymazané
     keep_media: Ponechať príspevky s médiami

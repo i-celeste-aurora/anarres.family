@@ -42,6 +42,12 @@ export function DirectTimeline() {
   return import('../../direct_timeline');
 }
 
+export function Collections () {
+  return import('../../collections').then(
+    module => ({default: module.Collections})
+  );
+}
+
 export function Status () {
   return import('../../status');
 }
@@ -231,7 +237,7 @@ export function LinkTimeline () {
 }
 
 export function AnnualReportModal () {
-  return import('../components/annual_report_modal');
+  return import('../../annual_report/modal');
 }
 
 export function ListEdit () {
