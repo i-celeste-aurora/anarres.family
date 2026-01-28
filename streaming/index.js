@@ -925,7 +925,7 @@ const startServer = async () => {
 
     res.write(':)\n');
 
-    const heartbeat = setInterval(() => res.write(':thump\n'), 15000);
+    const heartbeat = setInterval(() => res.write(':thump\n\n'), 15000);
 
     req.on('close', () => {
       req.log.info({ accountId: req.accountId }, `Ending stream`);
@@ -1003,7 +1003,7 @@ const startServer = async () => {
   // @ts-expect-error
   api.use(errorMiddleware);
 
-  api.get('/api/v1/streaming/*', (req, res) => {
+  api.get('/api/v1/streaming/*splat', (req, res) => {
     // @ts-expect-error
     const channelName = channelNameFromPath(req);
 

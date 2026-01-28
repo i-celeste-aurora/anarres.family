@@ -1167,7 +1167,6 @@ id:
       disabled_account: Akun Anda tidak akan dapat dipakai secara penuh. Namun, Anda tetap akan memiliki akses ke ekspor data dan aktivasi ulang.
       followers: Tindakan ini akan memindah semua pengikut Anda dari akun sekarang ke akun baru
       only_redirect_html: Secara alternatif, Anda <a href="%{path}">hanya dapat menaruh tulisan mengarahkan ke profil Anda</a>.
-      other_data: Tidak akan ada data lagi yang dipindahkan secara otomatis
       redirect: Pemberitahuan peralihan akan dimunculkan pada akun profil Anda dan akun akan dikecualikan dari pencarian
   moderation:
     title: Moderasi
@@ -1380,11 +1379,9 @@ id:
     enabled: Otomatis hapus kiriman lama
     enabled_hint: "Otomatis menghapus kiriman Anda saat sudah mencapai batasan usia, kecuali yang cocok \nsesuai di bawah ini"
     exceptions: Pengecualian
-    explanation: Karena menghapus kiriman adalah operasi dengan sumber daya besar, ini akan dilakukan perlahan ketika server tidak sedang sibuk. Karena alasan ini, kiriman akan dihapus setelah mencapai batas waktu.
     ignore_favs: Abaikan favorit
     ignore_reblogs: Abaikan boost
     interaction_exceptions: Pengecualian berdasar interaksi
-    interaction_exceptions_explanation: Perlu diingat tidak ada jaminan kiriman akan dihapus jika ia di bawah batas favorit atau boost setelah sebelumnya berhasil melewatinya.
     keep_direct: Simpan pesan langsung
     keep_direct_hint: Tidak mengapus pesan langsung Anda
     keep_media: Simpan kiriman dengan lampiran media
