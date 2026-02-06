@@ -16,18 +16,15 @@ import { Dropdown } from 'flavours/glitch/components/dropdown_menu';
 import { Icon } from 'flavours/glitch/components/icon';
 import ScrollableList from 'flavours/glitch/components/scrollable_list';
 import {
-  createCollection,
   fetchAccountCollections,
   selectMyCollections,
 } from 'flavours/glitch/reducers/slices/collections';
 import { useAppSelector, useAppDispatch } from 'flavours/glitch/store';
 
+import { messages as editorMessages } from './editor';
+
 const messages = defineMessages({
   heading: { id: 'column.collections', defaultMessage: 'My collections' },
-  create: {
-    id: 'collections.create_collection',
-    defaultMessage: 'Create collection',
-  },
   view: {
     id: 'collections.view_collection',
     defaultMessage: 'View collection',
@@ -49,25 +46,47 @@ const ListItem: React.FC<{
   const handleDeleteClick = useCallback(() => {
     dispatch(
       openModal({
-        modalType: 'CONFIRM_DELETE_LIST',
+        modalType: 'CONFIRM_DELETE_COLLECTION',
         modalProps: {
-          listId: id,
+          name,
+          id,
         },
       }),
     );
-  }, [dispatch, id]);
+  }, [dispatch, id, name]);
 
   const menu = useMemo(
     () => [
       { text: intl.formatMessage(messages.view), to: `/collections/${id}` },
-      { text: intl.formatMessage(messages.delete), action: handleDeleteClick },
+      null,
+      {
+        text: intl.formatMessage(editorMessages.manageAccounts),
+        to: `/collections/${id}/edit`,
+      },
+      {
+        text: intl.formatMessage(editorMessages.editDetails),
+        to: `/collections/${id}/edit/details`,
+      },
+      {
+        text: intl.formatMessage(editorMessages.editSettings),
+        to: `/collections/${id}/edit/settings`,
+      },
+      null,
+      {
+        text: intl.formatMessage(messages.delete),
+        action: handleDeleteClick,
+        dangerous: true,
+      },
     ],
     [intl, id, handleDeleteClick],
   );
 
   return (
     <div className='lists__item'>
-      <Link to={`/collections/${id}`} className='lists__item__title'>
+      <Link
+        to={`/collections/${id}/edit/details`}
+        className='lists__item__title'
+      >
         <span>{name}</span>
       </Link>
 
@@ -93,24 +112,6 @@ export const Collections: React.FC<{
   useEffect(() => {
     void dispatch(fetchAccountCollections({ accountId: me }));
   }, [dispatch, me]);
-
-  const addDummyCollection = useCallback(
-    (event: React.MouseEvent) => {
-      event.preventDefault();
-
-      void dispatch(
-        createCollection({
-          payload: {
-            name: 'Test Collection',
-            description: 'A useful test collection',
-            discoverable: true,
-            sensitive: false,
-          },
-        }),
-      );
-    },
-    [dispatch],
-  );
 
   const emptyMessage =
     status === 'error' ? (
@@ -150,9 +151,8 @@ export const Collections: React.FC<{
           <Link
             to='/collections/new'
             className='column-header__button'
-            title={intl.formatMessage(messages.create)}
-            aria-label={intl.formatMessage(messages.create)}
-            onClick={addDummyCollection}
+            title={intl.formatMessage(editorMessages.create)}
+            aria-label={intl.formatMessage(editorMessages.create)}
           >
             <Icon id='plus' icon={AddIcon} />
           </Link>
