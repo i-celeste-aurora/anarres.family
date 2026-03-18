@@ -411,7 +411,7 @@ body > [data-popper-placement] {
 
   &__suggestions {
     box-shadow: var(--dropdown-shadow);
-    background: var(--color-bg-elevated);
+    background: var(--color-bg-primary);
     border: 1px solid var(--color-border-primary);
     border-radius: 0 0 4px 4px;
     color: var(--color-text-primary);
@@ -1402,6 +1402,41 @@ body > [data-popper-placement] {
   }
 }
 
+@each $lang in $vertical-lr-langs {
+  // writing-mode and width must be applied to a single element. When
+  // this element inherits a text direction that is opposite to its own,
+  // the start of this element's text is cut off.
+
+  .status:not(.status--is-quote)
+    > .status__content
+    > .status__content__text:lang(#{$lang}),
+  .conversation
+    > .conversation__content
+    > .status__content
+    > .status__content__text:lang(#{$lang}) {
+    writing-mode: vertical-lr;
+    width: 100%; // detecting overflow
+    max-width: calc(100% - mod(100%, 22px)); // avoid cut-offs
+    max-height: 209px; // roughly above 500 characters, readable
+    overflow-x: hidden; // read more
+  }
+
+  .autosuggest-textarea > .autosuggest-textarea__textarea:lang(#{$lang}) {
+    writing-mode: vertical-lr;
+    min-height: 209px; // writable
+    max-height: 209px; // suppress autosizing by react-textarea-autosize
+    overflow-x: auto;
+    scrollbar-color: unset;
+  }
+
+  .detailed-status > .status__content > .status__content__text:lang(#{$lang}) {
+    writing-mode: vertical-lr;
+    width: 100%; // detecting overflow
+    max-height: 50vh;
+    overflow-x: auto;
+  }
+}
+
 .status__content.status__content--collapsed {
   max-height: 20px * 15; // 15 lines is roughly above 500 characters
 }
@@ -1701,7 +1736,7 @@ body > [data-popper-placement] {
   .detailed-status__display-name {
     color: var(--color-text-tertiary);
 
-    span {
+    span:not(.account__avatar) {
       display: inline;
     }
 
@@ -2050,7 +2085,12 @@ body > [data-popper-placement] {
 
 .account {
   padding: 10px; // glitch: reduced padding
-  border-bottom: 1px solid var(--color-border-primary);
+
+  // Using :where keeps specificity low, allowing for existing
+  // .account overrides to still apply
+  &:where(:not(&--without-border)) {
+    border-bottom: 1px solid var(--color-border-primary);
+  }
 
   .account__display-name {
     flex: 1 1 auto;
@@ -2108,7 +2148,7 @@ body > [data-popper-placement] {
     }
 
     &__popout {
-      background: var(--color-bg-elevated);
+      background: var(--color-bg-primary);
       backdrop-filter: $backdrop-blur-filter;
       border: 1px solid var(--color-border-primary);
       box-shadow: var(--dropdown-shadow);
@@ -2811,7 +2851,7 @@ a.account__display-name {
 }
 
 .dropdown-menu {
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-primary);
   backdrop-filter: $backdrop-blur-filter;
   border: 1px solid var(--color-border-primary);
   padding: 2px; // glitch: reduced padding
@@ -2910,6 +2950,7 @@ a.account__display-name {
   }
 
   &-subtitle {
+    color: var(--color-text-tertiary);
     font-weight: 400;
   }
 
@@ -2951,6 +2992,10 @@ a.account__display-name {
       background: var(--color-bg-disabled);
       outline: 0;
     }
+  }
+
+  button:is(:disabled, [aria-disabled='true']) &-subtitle {
+    color: inherit;
   }
 }
 
@@ -3019,8 +3064,6 @@ a.account__display-name {
     }
 
     &__main {
-      --column-header-height: 62px;
-
       box-sizing: border-box;
       width: 100%;
       flex: 0 1 auto;
@@ -3939,6 +3982,11 @@ a.account__display-name {
   &:hover {
     text-decoration: underline;
   }
+
+  &:focus-visible {
+    outline: var(--outline-focus-default);
+    outline-offset: -2px;
+  }
 }
 
 .column-header__back-button {
@@ -4072,15 +4120,17 @@ a.account__display-name {
 }
 
 .column-link {
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 12px;
+  padding: 10px;
+  padding-inline-start: 14px;
+  overflow: hidden;
   font-size: 16px;
   font-weight: 400;
   text-decoration: none;
-  overflow: hidden;
   white-space: nowrap;
   color: color-mix(
     in oklab,
@@ -4088,9 +4138,8 @@ a.account__display-name {
     var(--color-text-secondary)
   );
   background: transparent;
-  border: 0;
-  border-left: 4px solid transparent;
-  box-sizing: border-box;
+  border: 2px solid transparent;
+  border-radius: 4px;
 
   &:hover,
   &:active,
@@ -4102,17 +4151,15 @@ a.account__display-name {
     color: var(--color-text-brand);
   }
 
-  &:focus {
-    outline: 0;
-  }
-
   &:focus-visible {
+    outline: none;
     border-color: var(--color-text-brand);
-    border-radius: 0;
+    background: var(--color-bg-brand-softer);
   }
 
   &--logo {
-    padding: 10px;
+    padding: 8px;
+    padding-inline-start: 12px;
   }
 }
 
@@ -4251,7 +4298,8 @@ input.glitch-setting-text {
     cursor: pointer;
 
     & > div {
-      background: rgb(from var(--color-shadow-primary) r g b / 60%);
+      color: var(--color-text-on-media);
+      background: rgb(from var(--color-bg-media) r g b / 60%);
       border-radius: 8px;
       padding: 12px 9px;
       backdrop-filter: $backdrop-blur-filter;
@@ -4264,7 +4312,7 @@ input.glitch-setting-text {
     button,
     a {
       display: inline;
-      color: var(--color-text-primary);
+      color: var(--color-text-on-media);
       background: transparent;
       border: 0;
       padding: 0 8px;
@@ -4275,7 +4323,7 @@ input.glitch-setting-text {
       &:hover,
       &:active,
       &:focus {
-        color: var(--color-text-primary);
+        color: var(--color-text-on-media);
       }
     }
 
@@ -5283,7 +5331,7 @@ a.status-card {
       @include search-popout;
 
       padding: 0;
-      background: var(--color-bg-elevated);
+      background: var(--color-bg-primary);
     }
 
     &__menu-list {
@@ -5453,7 +5501,7 @@ a.status-card {
   position: relative;
   margin-top: 5px;
   z-index: 2;
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-primary);
   backdrop-filter: $backdrop-blur-filter;
   border: 1px solid var(--color-border-primary);
   box-shadow: var(--dropdown-shadow);
@@ -5480,7 +5528,7 @@ a.status-card {
   z-index: 4;
   top: -5px;
   inset-inline-start: -9px;
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-primary);
   border: 1px solid var(--color-border-primary);
   border-radius: 4px;
   box-shadow: var(--dropdown-shadow);
@@ -5547,7 +5595,7 @@ a.status-card {
   inset-inline-start: 0;
   z-index: -1;
   border-radius: 4px;
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-primary);
   box-shadow: 0 0 5px var(--color-shadow-primary);
 }
 
@@ -5652,7 +5700,7 @@ a.status-card {
 .language-dropdown__dropdown,
 .visibility-dropdown__dropdown {
   box-shadow: var(--dropdown-shadow);
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-primary);
   border: 1px solid var(--color-border-primary);
   padding: 4px;
   border-radius: 4px;
@@ -5872,7 +5920,7 @@ a.status-card {
 
     .emoji-mart-search {
       padding: 10px;
-      background: var(--color-bg-elevated);
+      background: var(--color-bg-primary);
 
       input {
         padding: 8px 12px;
@@ -5905,7 +5953,7 @@ a.status-card {
 
     .emoji-mart-scroll {
       padding: 0 10px 10px;
-      background: var(--color-bg-elevated);
+      background: var(--color-bg-primary);
     }
 
     &__results {
@@ -6031,7 +6079,7 @@ a.status-card {
     inset-inline-start: 0;
     margin-top: -2px;
     width: 100%;
-    background: var(--color-bg-elevated);
+    background: var(--color-bg-primary);
     border: 1px solid var(--color-border-primary);
     border-radius: 0 0 4px 4px;
     box-shadow: var(--dropdown-shadow);
@@ -6626,15 +6674,19 @@ a.status-card {
     line-height: 20px;
     color: var(--color-text-secondary);
 
-    h1 {
+    /*
+     * Using the :where selector to lower specificity and allow for
+     * easy customisation of modal heading styles
+     */
+    :where(h1) {
       font-size: 16px;
       line-height: 24px;
       color: var(--color-text-primary);
       font-weight: 500;
+    }
 
-      &:not(:only-child) {
-        margin-bottom: 8px;
-      }
+    :where(h1:not(:only-child)) {
+      margin-bottom: 8px;
     }
 
     strong {
@@ -6788,7 +6840,7 @@ a.status-card {
   width: 588px;
   max-height: 80vh;
   flex-direction: column;
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-primary);
   backdrop-filter: $backdrop-blur-filter;
   border: 1px solid var(--color-border-primary);
   border-radius: 16px;
@@ -6872,7 +6924,7 @@ a.status-card {
   }
 
   &__popout {
-    background: var(--color-bg-elevated);
+    background: var(--color-bg-primary);
     backdrop-filter: $backdrop-blur-filter;
     border: 1px solid var(--color-border-primary);
     box-shadow: var(--dropdown-shadow);
@@ -7178,7 +7230,7 @@ a.status-card {
 
 .actions-modal {
   border-radius: 8px 8px 0 0;
-  background: var(--color-bg-elevated);
+  background: var(--color-bg-primary);
   backdrop-filter: $backdrop-blur-filter;
   border-color: var(--color-border-primary);
   box-shadow: var(--dropdown-shadow);
@@ -7396,7 +7448,7 @@ img.modal-warning {
 
   &--solid {
     color: var(--color-text-primary);
-    background: var(--color-bg-elevated);
+    background: var(--color-bg-primary);
     border: 1px solid var(--color-border-primary);
   }
 
@@ -8726,7 +8778,7 @@ noscript {
     gap: 8px;
 
     $button-breakpoint: 420px;
-    $button-fallback-breakpoint: #{$button-breakpoint} + 55px;
+    $button-fallback-breakpoint: $button-breakpoint + 55px;
 
     &--desktop {
       margin-top: 55px;
@@ -8750,7 +8802,7 @@ noscript {
       }
 
       @supports (not (container-type: inline-size)) {
-        @media (min-width: (#{$button-fallback-breakpoint} + 1px)) {
+        @media (min-width: ($button-fallback-breakpoint + 1px)) {
           display: none;
         }
       }
@@ -9395,10 +9447,6 @@ noscript {
 .status__wrapper,
 .conversation {
   position: relative;
-
-  // When scrolling these elements into view, take into account
-  // the column header height
-  scroll-margin-top: var(--column-header-height, 0);
 
   &.unread {
     &::before {
@@ -10830,6 +10878,8 @@ noscript {
     position: relative;
 
     &__scroll-button {
+      --scroll-button-bg: var(--color-bg-brand-base);
+
       position: absolute;
       height: 100%;
       background: transparent;
@@ -10837,7 +10887,6 @@ noscript {
       cursor: pointer;
       top: 0;
       color: var(--color-text-primary);
-      opacity: 0.5;
 
       &.left {
         left: 0;
@@ -10850,7 +10899,7 @@ noscript {
       &__icon {
         border-radius: 50%;
         color: var(--color-text-on-brand-base);
-        background: var(--color-bg-brand-base);
+        background: var(--scroll-button-bg);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -10866,7 +10915,7 @@ noscript {
       &:hover,
       &:focus,
       &:active {
-        opacity: 1;
+        --scroll-button-bg: var(--color-bg-brand-base-hover);
       }
     }
 
@@ -11789,6 +11838,9 @@ noscript {
 
 .column-footer {
   padding: 16px;
+  position: sticky;
+  bottom: 0;
+  background: var(--color-bg-primary);
 }
 
 .lists-scrollable {

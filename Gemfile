@@ -5,7 +5,7 @@ ruby '>= 3.2.0', '< 3.5.0'
 
 gem 'propshaft'
 gem 'puma', '~> 7.0'
-gem 'rails', '~> 8.0'
+gem 'rails', '~> 8.1.0'
 gem 'thor', '~> 1.2'
 
 gem 'dotenv'
@@ -27,7 +27,7 @@ gem 'addressable', '~> 2.8'
 gem 'bootsnap', require: false
 gem 'browser'
 gem 'charlock_holmes', '~> 0.7.7'
-gem 'chewy', '~> 7.3'
+gem 'chewy'
 gem 'devise'
 gem 'devise-two-factor'
 
@@ -102,10 +102,10 @@ gem 'rdf-normalize', '~> 0.5'
 
 gem 'prometheus_exporter', '~> 2.2', require: false
 
-gem 'opentelemetry-api', '~> 1.7.0'
+gem 'opentelemetry-api', '~> 1.8.0'
 
 group :opentelemetry do
-  gem 'opentelemetry-exporter-otlp', '~> 0.31.0', require: false
+  gem 'opentelemetry-exporter-otlp', '~> 0.32.0', require: false
   gem 'opentelemetry-instrumentation-active_job', '~> 0.10.0', require: false
   gem 'opentelemetry-instrumentation-active_model_serializers', '~> 0.24.0', require: false
   gem 'opentelemetry-instrumentation-concurrent_ruby', '~> 0.24.0', require: false
@@ -128,9 +128,6 @@ group :test do
 
   # Adds RSpec Error/Warning annotations to GitHub PRs on the Files tab
   gem 'rspec-github', '~> 3.0', require: false
-
-  # RSpec helpers for email specs
-  gem 'email_spec'
 
   # Extra RSpec extension methods and helpers for sidekiq
   gem 'rspec-sidekiq', '~> 5.0'
@@ -180,7 +177,7 @@ group :development do
 
   # Enhanced error message pages for development
   gem 'better_errors', '~> 2.9'
-  gem 'binding_of_caller', '~> 1.0'
+  gem 'binding_of_caller'
 
   # Preview mail in the browser
   gem 'letter_opener', '~> 1.8'
