@@ -6,8 +6,8 @@ import { throttle } from 'lodash';
 import api from 'flavours/glitch/api';
 import { browserHistory } from 'flavours/glitch/components/router';
 import { countableText } from 'flavours/glitch/features/compose/util/counter';
-import { search as emojiSearch } from 'flavours/glitch/features/emoji/emoji_mart_search_light';
 import { tagHistory } from 'flavours/glitch/settings';
+import { emojiMartSearch } from '@/flavours/glitch/features/emoji/picker';
 import { recoverHashtags } from 'flavours/glitch/utils/hashtag';
 
 import { showAlert, showAlertForError } from './alerts';
@@ -104,7 +104,7 @@ export const ensureComposeIsVisible = (getState) => {
 
 export function setComposeToStatus(status, text, spoiler_text, content_type) {
   return (dispatch, getState) => {
-    const maxOptions = getState().server.getIn(['server', 'configuration', 'polls', 'max_options']);
+    const maxOptions = getState().server.server.item?.configuration.polls.max_options;
 
     dispatch({
       type: COMPOSE_SET_STATUS,
@@ -161,10 +161,11 @@ export function resetCompose() {
   };
 }
 
-export const focusCompose = (defaultText = '') => (dispatch, getState) => {
+export const focusCompose = (defaultText = '', caretStart = false) => (dispatch, getState) => {
   dispatch({
     type: COMPOSE_FOCUS,
     defaultText,
+    caretStart,
   });
 
   ensureComposeIsVisible(getState);
@@ -360,7 +361,7 @@ export function uploadCompose(files) {
       dispatch(showAlert({ message: messages.uploadQuote }));
       return;
     }
-    const uploadLimit = getState().getIn(['server', 'server', 'configuration', 'statuses', 'max_media_attachments']);
+    const uploadLimit = getState().getIn(['server', 'server', 'item', 'configuration', 'statuses', 'max_media_attachments']);
     const media = getState().getIn(['compose', 'media_attachments']);
     const pending = getState().getIn(['compose', 'pending_media_attachments']);
     const progress = new Array(files.length).fill(0);
@@ -596,7 +597,7 @@ export function clearComposeSuggestions() {
   };
 }
 
-const fetchComposeSuggestionsAccounts = throttle((dispatch, getState, token) => {
+const fetchComposeSuggestionsAccounts = throttle((dispatch, token) => {
   if (fetchComposeSuggestionsAccountsController) {
     fetchComposeSuggestionsAccountsController.abort();
   }
@@ -623,12 +624,14 @@ const fetchComposeSuggestionsAccounts = throttle((dispatch, getState, token) => 
   });
 }, 200, { leading: true, trailing: true });
 
-const fetchComposeSuggestionsEmojis = (dispatch, getState, token) => {
-  const results = emojiSearch(token.replace(':', ''), { maxResults: 5 });
+const fetchComposeSuggestionsEmojis = async (dispatch, token) => {
+  // Right now we are hard-coding the locale to English since the picker search only supports English.
+  // Once we replace the legacy picker we can remove this and use the actual locale of the user.
+  const results = await emojiMartSearch(token, 'en', 5);
   dispatch(readyComposeSuggestionsEmojis(token, results));
 };
 
-const fetchComposeSuggestionsTags = throttle((dispatch, getState, token) => {
+const fetchComposeSuggestionsTags = throttle((dispatch, token) => {
   if (fetchComposeSuggestionsTagsController) {
     fetchComposeSuggestionsTagsController.abort();
   }
@@ -661,14 +664,14 @@ export function fetchComposeSuggestions(token) {
   return (dispatch, getState) => {
     switch (token[0]) {
     case ':':
-      fetchComposeSuggestionsEmojis(dispatch, getState, token);
+      void fetchComposeSuggestionsEmojis(dispatch, token);
       break;
     case '#':
     case '＃':
-      fetchComposeSuggestionsTags(dispatch, getState, token);
+      fetchComposeSuggestionsTags(dispatch, token);
       break;
     default:
-      fetchComposeSuggestionsAccounts(dispatch, getState, token);
+      fetchComposeSuggestionsAccounts(dispatch, token);
       break;
     }
   };
@@ -701,7 +704,7 @@ export function selectComposeSuggestion(position, token, suggestion, path) {
     let completion, startPosition;
 
     if (suggestion.type === 'emoji') {
-      completion    = suggestion.native || suggestion.colons;
+      completion    = suggestion.native || `:${suggestion.id}:`;
       startPosition = position - 1;
 
       dispatch(useEmoji(suggestion));

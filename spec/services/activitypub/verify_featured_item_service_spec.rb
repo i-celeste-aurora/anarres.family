@@ -55,7 +55,7 @@ RSpec.describe ActivityPub::VerifyFeaturedItemService do
       let(:stubbed_service) { instance_double(ActivityPub::FetchRemoteAccountService) }
 
       before do
-        allow(stubbed_service).to receive(:call).with('https://example.com/actor/1') { featured_account }
+        allow(stubbed_service).to receive(:call).with('https://example.com/actor/1', request_id: nil) { featured_account }
         allow(ActivityPub::FetchRemoteAccountService).to receive(:new).and_return(stubbed_service)
       end
 
@@ -83,6 +83,27 @@ RSpec.describe ActivityPub::VerifyFeaturedItemService do
 
       expect(collection_item.account_id).to be_nil
       expect(collection_item).to be_rejected
+    end
+  end
+
+  context 'when the authorization references a different account' do
+    let(:verification_json) do
+      {
+        '@context' => 'https://www.w3.org/ns/activitystreams',
+        'type' => 'FeatureAuthorization',
+        'id' => approval_uri,
+        'interactionTarget' => 'https://example.com/actor/2',
+        'interactingObject' => collection.uri,
+      }
+    end
+
+    before { featured_account }
+
+    it 'does not verify the item' do
+      subject.call(collection_item, approval_uri)
+
+      expect(collection_item.account_id).to be_nil
+      expect(collection_item).to be_pending
     end
   end
 end
