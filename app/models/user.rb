@@ -44,15 +44,10 @@
 class User < ApplicationRecord
   self.ignored_columns += %w(
     admin
-    current_sign_in_ip
     encrypted_otp_secret
     encrypted_otp_secret_iv
     encrypted_otp_secret_salt
-    filtered_languages
-    last_sign_in_ip
     moderator
-    remember_created_at
-    remember_token
     skip_sign_in_token
   )
 
@@ -92,10 +87,10 @@ class User < ApplicationRecord
   accepts_nested_attributes_for :invite_request, reject_if: ->(attributes) { attributes['text'].blank? && !Setting.require_invite_text }
   validates :invite_request, presence: true, on: :create, if: :invite_text_required?
 
-  validates :email, presence: true, email_address: true
+  validates :email, presence: true, email_address: true, length: { maximum: 320 }
+  validates :email, email_mx: { attempt_ip: :sign_up_ip }, if: :validate_email_dns?
 
   validates_with UserEmailValidator, if: -> { ENV['EMAIL_DOMAIN_LISTS_APPLY_AFTER_CONFIRMATION'] == 'true' || !confirmed? }
-  validates_with EmailMxValidator, if: :validate_email_dns?
   validates :agreement, acceptance: { allow_nil: false, accept: [true, 'true', '1'] }, on: :create
 
   # Honeypot/anti-spam fields
@@ -166,6 +161,10 @@ class User < ApplicationRecord
 
   def valid_invitation?
     invite_id.present? && invite.valid_for_use?
+  end
+
+  def valid_bypassing_invitation?
+    valid_invitation? && invite.bypass_approval?
   end
 
   def disable!
@@ -420,7 +419,7 @@ class User < ApplicationRecord
       if requires_approval?
         false
       else
-        open_registrations? || valid_invitation? || external?
+        open_registrations? || valid_bypassing_invitation? || external?
       end
     end
   end

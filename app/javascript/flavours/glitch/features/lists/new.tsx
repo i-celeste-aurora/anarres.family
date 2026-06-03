@@ -2,18 +2,17 @@ import { useCallback, useState, useEffect } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
 import { useParams, useHistory, Link } from 'react-router-dom';
 
 import { isFulfilled } from '@reduxjs/toolkit';
 
-import Toggle from 'react-toggle';
+import { Helmet } from '@unhead/react/helmet';
 
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import ListAltIcon from '@/material-icons/400-24px/list_alt.svg?react';
 import { fetchList } from 'flavours/glitch/actions/lists';
 import { createList, updateList } from 'flavours/glitch/actions/lists_typed';
-import { apiGetAccounts } from 'flavours/glitch/api/lists';
+import { apiGetListAccounts } from 'flavours/glitch/api/lists';
 import type { ApiAccountJSON } from 'flavours/glitch/api_types/accounts';
 import type { RepliesPolicyType } from 'flavours/glitch/api_types/lists';
 import { Avatar } from 'flavours/glitch/components/avatar';
@@ -23,6 +22,7 @@ import { ColumnHeader } from 'flavours/glitch/components/column_header';
 import {
   SelectField,
   TextInputField,
+  Toggle,
 } from 'flavours/glitch/components/form_fields';
 import { Icon } from 'flavours/glitch/components/icon';
 import { LoadingIndicator } from 'flavours/glitch/components/loading_indicator';
@@ -44,7 +44,7 @@ const MembersLink: React.FC<{
   const [avatarAccounts, setAvatarAccounts] = useState<ApiAccountJSON[]>([]);
 
   useEffect(() => {
-    void apiGetAccounts(id)
+    void apiGetListAccounts(id)
       .then((data) => {
         setAvatarCount(data.length);
         setAvatarAccounts(data.slice(0, 3));

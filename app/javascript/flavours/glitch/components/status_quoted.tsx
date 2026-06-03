@@ -226,17 +226,20 @@ export const QuotedStatus: React.FC<QuotedStatusProps> = ({
   const intl = useIntl();
   const headerRenderFn: StatusHeaderRenderFn = useCallback(
     (props) => (
-      <StatusHeader {...props}>
-        {onQuoteCancel && (
-          <IconButton
-            onClick={onQuoteCancel}
-            className='status__quote-cancel'
-            title={intl.formatMessage(quoteCancelMessage)}
-            icon='cancel-fill'
-            iconComponent={CancelFillIcon}
-          />
-        )}
-      </StatusHeader>
+      <StatusHeader
+        {...props}
+        contentAfterDate={
+          onQuoteCancel && (
+            <IconButton
+              onClick={onQuoteCancel}
+              className='status__quote-cancel'
+              title={intl.formatMessage(quoteCancelMessage)}
+              icon='cancel-fill'
+              iconComponent={CancelFillIcon}
+            />
+          )
+        }
+      />
     ),
     [intl, onQuoteCancel],
   );
@@ -336,7 +339,6 @@ export const QuotedStatus: React.FC<QuotedStatusProps> = ({
 
   return (
     <div className='status__quote'>
-      {/* @ts-expect-error Status is not yet typed */}
       <StatusContainer
         isQuotedPost
         id={quotedStatusId}

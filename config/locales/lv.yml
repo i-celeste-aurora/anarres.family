@@ -647,7 +647,6 @@ lv:
       action_log: Audita žurnāls
       action_taken_by: Veiktā darbība
       actions:
-        delete_description_html: Raksti, par kurām ziņots, tiks dzēsti, un tiks reģistrēts brīdinājums, lai palīdzētu tev izvērst turpmākos pārkāpumus saistībā ar to pašu kontu.
         mark_as_sensitive_description_html: Informācijas nesēji ierakstos, par kuriem ziņots, tiks atzīmēti kā jūtīgi, un tiks iegrāmatots brīdinājums, lai palīdzētu ziņot par turpmākiem tā paša konta pārkāpumiem.
         other_description_html: Skatīt vairāk iespēju kontrolēt konta uzvedību un pielāgot saziņu ar paziņoto kontu.
         resolve_description_html: Pret norādīto kontu netiks veiktas nekādas darbības, netiks reģistrēts brīdinājums, un ziņojums tiks slēgts.
@@ -673,7 +672,6 @@ lv:
       confirm: Apstiprināt
       confirm_action: Apstiprināt satura pārraudzības darbību pret @%{acct}
       created_at: Ziņoti
-      delete_and_resolve: Izdzēst rakstus
       forwarded: Pārsūtīti
       forwarded_replies_explanation: Šis ziņojums ir no attāla lietotāja un par attālu saturu. Tas tika pārvirzīts šeit, jo saturs, par kuru tika ziņots, ir atbilde vienam no šī servera lietotājiem.
       forwarded_to: Pārsūtīti %{domain}
@@ -1174,7 +1172,6 @@ lv:
   application_mailer:
     notification_preferences: Mainīt e-pasta uztādījumus
     salutation: "%{name},"
-    settings: 'Mainīt e-pasta uztādījumus: %{link}'
     unsubscribe: Atcelt abonēšanu
     view: 'Skatīt:'
     view_profile: Skatīt profilu
@@ -1350,8 +1347,6 @@ lv:
       your_appeal_pending: Tu iesniedzi pārsūdzību
       your_appeal_rejected: Tava pārsūdzība tika noraidīta
   edit_profile:
-    basic_information: Pamata informācija
-    hint_html: "<strong>Pielāgo, ko cilvēki redz Tavā publiskajā profilā un blakus Taviem ierakstiem.</strong> Ir lielāka iespējamība, ka citi clivēki sekos Tev un mijiedarbosies ar Tevi, ja Tev ir aizpildīts profils un profila attēls."
     other: Cits
   errors:
     '400': Tevis iesniegtais pieprasījums bija nederīgs vai nepareizi izveidots.
@@ -1387,10 +1382,8 @@ lv:
     mutes: Apklusinātie konti
     storage: Multividesu krātuve
   featured_tags:
-    add_new: Pievienot jaunu
     errors:
       limit: Tu jau esi piedāvājis maksimālo tēmturu skaitu
-    hint_html: "<strong>Izcel savus vissvarīgākos tēmturus savā profilā!</strong> Lielisks rīks, lai izsekotu saviem radošajiem darbiem un ilgtermiņa projektiem, izceltie tēmturi tiek attēloti pamanāmi attēloti Tavā profilā un ļauj ātru piekļuvi saviem ierakstiem."
   filters:
     contexts:
       account: Profili
@@ -1596,21 +1589,6 @@ lv:
     failed_sign_in_html: Neizdevies pieteikšanās mēģinājums ar %{method} no %{ip} (%{browser})
     successful_sign_in_html: Sekmīga pieteikšanās ar %{method} no %{ip} (%{browser})
     title: Autentifikācijas vēsture
-  mail_subscriptions:
-    unsubscribe:
-      action: Jā, atcelt abonēšanu
-      complete: Anulēts
-      confirmation_html: Vai tiešām atteikties no %{type} saņemšanas savā e-pasta adresē %{email} par %{domain} esošo Mastodon? Vienmēr var abonēt no jauna savos <a href="%{settings_path}">e-pasta paziņojumu iestatījumos</a>.
-      emails:
-        notification_emails:
-          favourite: izlases paziņojumu e-pasta ziņojumi
-          follow: sekošanas paziņojumu e-pasta ziņojumi
-          follow_request: sekošanas pieprasījumu e-pasta ziņojumi
-          mention: pieminēšanas paziņojumu e-pasta ziņojumi
-          reblog: pastiprinājumu paziņojumu e-pasta ziņojumi
-      resubscribe_html: Ja abonements tika atcelts kļūdas dēļ, abonēt no jauna var savos <a href="%{settings_path}">e-pasta paziņojumu iestatījumos</a>.
-      success_html: Tu vairs savā e-pasta adresē %{email} nesaņemsi %{type} par %{domain} esošo Mastodon.
-      title: Atcelt abonēšanu
   media_attachments:
     validations:
       images_and_video: Nevar pievienot videoklipu tādai ziņai, kura jau satur attēlus
