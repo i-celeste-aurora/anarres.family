@@ -2,9 +2,11 @@ import { SUPPORTED_LOCALES } from 'emojibase';
 import type { CompactEmoji, Locale, ShortcodesDataset } from 'emojibase';
 
 import type { ApiCustomEmojiJSON } from '@/mastodon/api_types/custom_emoji';
+import { onceAsync } from '@/mastodon/utils/promises';
 
 import { openEmojiDB } from './db-schema';
 import type { Database } from './db-schema';
+import { importEmojiData } from './loader';
 import { localeToSegmenter, toSupportedLocale } from './locale';
 import {
   extractTokens,
@@ -12,7 +14,7 @@ import {
   transformCustomEmojiData,
   transformEmojiData,
 } from './normalize';
-import type { AnyEmojiData, CacheKey } from './types';
+import type { AnyEmojiData, CacheKey, CustomEmojiData } from './types';
 import { emojiLogger } from './utils';
 
 const loadedLocales = new Set<Locale>();
@@ -21,8 +23,6 @@ const log = emojiLogger('database');
 
 // Loads the database in a way that ensures it's only loaded once.
 const loadDB = (() => {
-  let dbPromise: Promise<Database> | null = null;
-
   // Actually load the DB.
   async function initDB() {
     const db = await openEmojiDB();
@@ -31,17 +31,14 @@ const loadDB = (() => {
     return db;
   }
 
+  let dbPromise = onceAsync(initDB);
+
   // Loads the database, or returns the existing promise if it hasn't resolved yet.
-  const loadPromise = async (): Promise<Database> => {
-    if (dbPromise) {
-      return dbPromise;
-    }
-    dbPromise = initDB();
-    return dbPromise;
-  };
+  const loadPromise = () => dbPromise();
+
   // Special way to reset the database, used for unit testing.
   loadPromise.reset = () => {
-    dbPromise = null;
+    dbPromise = onceAsync(initDB);
   };
   return loadPromise;
 })();
@@ -78,6 +75,8 @@ export async function search({
   // Create an array of emoji results
   const db = await loadDB();
   const resultArrays: ScoreMap[] = [];
+  const existingCustomShortcodes = new Set<string>();
+
   for (let i = 0; i < queryTokens.length; i++) {
     const token = queryTokens[i];
     if (!token) continue;
@@ -96,6 +95,7 @@ export async function search({
       ],
     );
     const resultMap: ScoreMap = new Map();
+
     for (const emoji of unicodeResults) {
       const score = getScoreForEmoji(emoji, token);
       if (score === null) {
@@ -103,11 +103,13 @@ export async function search({
       }
       resultMap.set(emoji.hexcode, { ...emoji, score });
     }
+
     for (const emoji of customResults) {
       const score = getScoreForEmoji(emoji, token);
       if (score === null) {
         continue;
       }
+      existingCustomShortcodes.add(emoji.shortcode);
       resultMap.set(emoji.shortcode, { ...emoji, score });
     }
 
@@ -119,7 +121,14 @@ export async function search({
       if (!emoji) {
         continue;
       }
-      const score = getScoreForEmoji(emoji, token);
+      // Score the emoji with the legacy shortcode, even though it's not part of the emoji.
+      const score = getScoreForEmoji(
+        {
+          ...emoji,
+          shortcodes: [...shortcodeResult.shortcodes, ...emoji.shortcodes],
+        },
+        token,
+      );
       if (score === null) {
         continue;
       }
@@ -143,7 +152,26 @@ export async function search({
         return intersection;
       })
       .values(),
-  ).toSorted((a, b) => a.score - b.score);
+  );
+
+  // If there are no results, try a cursor-based custom emoji search instead.
+  if (results.length === 0 || results.length < limit) {
+    const customEmojisFound = await fullCustomSearch(
+      query,
+      existingCustomShortcodes,
+    );
+    if (customEmojisFound.length > 0) {
+      log(
+        'cursor search found %d results for "%s"',
+        customEmojisFound.length,
+        query,
+      );
+      results.push(...customEmojisFound);
+    }
+  }
+
+  // Sort by score, descending.
+  results.sort((a, b) => a.score - b.score);
 
   const time = performance.measure('emoji-search-end', 'emoji-search-start');
   log(
@@ -159,14 +187,26 @@ export async function search({
   return results;
 }
 
-function getScoreForEmoji(emoji: AnyEmojiData, query: string) {
+function getScoreForEmoji(
+  emoji: AnyEmojiData,
+  query: string,
+  checkTokens = true,
+) {
   const id = 'shortcode' in emoji ? emoji.shortcode : emoji.label;
   if (id === query) {
     return 0;
   }
 
   let index = 1;
-  for (const token of [id, ...emoji.tokens]) {
+  const searchTokens = [id];
+  if (checkTokens) {
+    // Check shortcodes before tokens as they are more important.
+    if ('shortcodes' in emoji) {
+      searchTokens.push(...emoji.shortcodes);
+    }
+    searchTokens.push(...emoji.tokens);
+  }
+  for (const token of searchTokens) {
     const tokenIndex = token.indexOf(query);
     if (tokenIndex !== -1) {
       return index + tokenIndex / token.length;
@@ -175,6 +215,51 @@ function getScoreForEmoji(emoji: AnyEmojiData, query: string) {
   }
 
   return null;
+}
+
+async function fullCustomSearch(query: string, existing = new Set<string>()) {
+  const db = await loadDB();
+  const trx = db.transaction('custom', 'readonly');
+  const foundEmojis = new Set<string>();
+
+  // First iterate over chunks of 1,000 custom emoji keys and find any matches.
+  const chunkSize = 1_000;
+  let lastKey: string | null = null;
+  let keys: string[] = [];
+  do {
+    const keyRange = lastKey ? IDBKeyRange.lowerBound(lastKey, true) : null;
+    keys = await trx.store.getAllKeys(keyRange, chunkSize);
+
+    if (keys.length === 0) {
+      break;
+    }
+    log('cursor search got batch of %d emojis', keys.length);
+    lastKey = keys.at(-1) ?? null;
+
+    for (const key of keys) {
+      if (!foundEmojis.has(key) && !existing.has(key) && key.includes(query)) {
+        foundEmojis.add(key);
+      }
+    }
+  } while (keys.length === chunkSize);
+
+  // Next get the full emojis for all matches.
+  const emojis = await Promise.all(
+    foundEmojis.keys().map((key) => trx.store.get(key)),
+  );
+  const results: (CustomEmojiData & { score: number })[] = [];
+  for (const emoji of emojis) {
+    if (emoji) {
+      const score = getScoreForEmoji(emoji, query, false);
+      if (score && score > 0) {
+        results.push({
+          score,
+          ...emoji,
+        });
+      }
+    }
+  }
+  return results;
 }
 
 export async function putEmojiData(emojis: CompactEmoji[], locale: Locale) {
@@ -342,8 +427,6 @@ async function toLoadedLocale(localeString: string) {
   }
   if (!loadedLocales.has(locale)) {
     log('Locale %s not loaded, importing...', locale);
-    // Ignore the INEFFECTIVE_DYNAMIC_IMPORT Vite warning, since the static import location is inside an inlined web worker.
-    const { importEmojiData } = await import(/* @vite-ignore */ './loader');
     await importEmojiData(locale);
     return locale;
   }
