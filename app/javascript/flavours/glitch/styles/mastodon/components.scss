@@ -1597,6 +1597,7 @@ body > [data-popover-placement] {
 
     & > .status__content,
     & > .status__action-bar,
+    & > .reactions-bar,
     & > .media-gallery,
     & > div > .video-player,
     & > .audio-player,
@@ -10847,7 +10848,7 @@ noscript {
   }
 
   &--reaction &__icon {
-    color: $blurple-300;
+    color: var(--color-text-brand);
   }
 
   &--reblog &__icon {
